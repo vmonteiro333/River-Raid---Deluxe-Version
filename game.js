@@ -85,7 +85,7 @@ class Player {
         this.width = 42;
         this.height = 44;
         this.x = canvas.width / 2 - this.width / 2;
-        this.y = canvas.height - 100;
+        this.y = canvas.height - 160;
         this.speedX = 5;
         this.fuel = 100;
         this.maxFuel = 100;
@@ -201,9 +201,13 @@ class Enemy {
         this.dirx = Math.random() > 0.5 ? 1 : -1;
 
         if (type === 'ship') {
+            this.width = 66;
+            this.height = 36;
             this.speedX = 1;
             this.color = '#ff3333';
         } else if (type === 'heli') {
+            this.width = 52;
+            this.height = 22;
             this.speedX = 2;
             this.color = '#ff9933';
             this.timer = Math.random() * 100;
@@ -242,14 +246,69 @@ class Enemy {
     }
 
     draw(ctx) {
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        let sprite = [];
+        let colors = {};
 
-        // details
-        ctx.fillStyle = '#000';
         if (this.type === 'heli') {
-            // rotor
-            ctx.fillRect(this.x + this.width / 2 - ((frameCount % 10) / 10) * this.width, this.y - 5, ((frameCount % 10) / 10) * this.width * 2, 2);
+            const rotor = frameCount % 10 < 5 ? "RRRRRRRRRRRRR" : "  RRR RRR RRR";
+            sprite = [
+                "      " + rotor + "       ",
+                "               D      ",
+                "  D           LDD     ",
+                " LLD       LLLLLDDD   ",
+                " LLLL   LLLLLLLLDDDD  ",
+                " LLLLLLLLLLLLLLDDDDD  ",
+                " LLDLLLLLLLLLLLDDDDD  ",
+                "         LLLLLLLLDD   ",
+                "         LLLLLLLL     ",
+                "         D      D     ",
+                "      DDDDDDDDDDDDDD  "
+            ];
+            // If moving right, flip sprite
+            if (this.dirx === 1) {
+                sprite = sprite.map(row => row.split('').reverse().join(''));
+            }
+            colors = { 'L': '#5b7b42', 'D': '#222', 'R': '#555' };
+        } else if (this.type === 'ship') {
+            sprite = [
+                "           DD         ",
+                "           YY         ",
+                "          DYYD        ",
+                "     W    WWWW  WW    ",
+                "   WWWW  DWWWWD WW    ",
+                "  WWWWWW DWWWWD WW    ",
+                " WWWWWWWWWWWWWWWWWWWW ",
+                " WWBBWWBBWWBBWWWWWWWW ",
+                " DDDDDDDDDDDDDDDDDDDD ",
+                "DDBBDBBDBBDBBDBBDBBDDD",
+                "DDDDDDDDDDDDDDDDDDDDDD",
+                " RRRRRRRRRRRRRRRRRRRR "
+            ];
+            // If moving right, flip sprite
+            if (this.dirx === 1) {
+                sprite = sprite.map(row => row.split('').reverse().join(''));
+            }
+            colors = { 'D': '#2b2d42', 'Y': '#f3c642', 'W': '#e8ebf0', 'B': '#3a86ff', 'R': '#d90429' };
+        } else {
+            // Fallback Jet
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            return;
+        }
+
+        const rows = sprite.length;
+        const cols = sprite[0].length;
+        const pixelW = this.width / cols;
+        const pixelH = this.height / rows;
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const char = sprite[r][c];
+                if (char !== ' ' && colors[char]) {
+                    ctx.fillStyle = colors[char];
+                    ctx.fillRect(this.x + c * pixelW, this.y + r * pixelH, pixelW + 0.5, pixelH + 0.5);
+                }
+            }
         }
     }
 }
@@ -313,7 +372,7 @@ class Map {
         });
 
         // Spawn chance for entities
-        if (distance > 100 && Math.random() < 0.02 + (level * 0.005)) {
+        if (distance > 30 && Math.random() < 0.045 + (level * 0.008)) {
             // Ensure enemy is spawned over water
             let eX = this.currentLeft + 20 + Math.random() * (canvas.width - this.currentLeft - this.currentRight - 60);
 
