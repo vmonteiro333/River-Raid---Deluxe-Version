@@ -365,31 +365,28 @@ class Map {
             this.targetLeft = Math.random() * maxLeft;
         }
 
-        // Lerp towards targets for smooth curves
-        this.currentLeft += (this.targetLeft - this.currentLeft) * 0.1;
+        // Snap directly to targets instead of smooth curves to make rigid, straight terrain layout
+        this.currentLeft = this.targetLeft;
         let rightSize = canvas.width - this.currentLeft - this.targetWidth;
-        this.currentRight += (rightSize - this.currentRight) * 0.1;
+        this.currentRight = rightSize;
 
         // Island logic
         if (!this.islandActive && Math.random() < 0.015 && this.targetWidth > 200) {
             this.islandActive = true;
             this.islandTimer = 40 + Math.random() * 60; // duration in segments
             this.currentIslandCenter = this.currentLeft + this.targetWidth / 2;
-            this.currentIslandW = 0;
             this.targetIslandW = this.targetWidth * 0.35; // island takes 35% of river
         }
 
         if (this.islandActive) {
             this.islandTimer--;
-            if (this.islandTimer <= 0) this.targetIslandW = 0;
-            if (this.islandTimer <= 0 && this.currentIslandW < 5) {
+            if (this.islandTimer <= 0) {
                 this.islandActive = false;
-                this.currentIslandW = 0;
+                this.targetIslandW = 0;
             }
         }
 
-        // Lerp Island width
-        this.currentIslandW += (this.targetIslandW - this.currentIslandW) * 0.1;
+        this.currentIslandW = this.targetIslandW;
 
         this.segments.unshift({
             y: y,
