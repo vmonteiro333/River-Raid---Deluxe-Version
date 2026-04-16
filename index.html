@@ -43,23 +43,48 @@
             z-index: 10;
         }
 
-        #fuel-bar-container {
-            width: 200px;
-            height: 20px;
-            background-color: #333;
-            border: 2px solid white;
+        #fuel-gauge-container {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
+            width: 300px;
+            height: 38px;
+            background-color: #0d3b8e;
+            /* River blue */
+            border-top: 5px solid black;
+            border-bottom: 5px solid black;
             z-index: 10;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: black;
         }
 
-        #fuel-bar {
-            width: 100%;
-            height: 100%;
-            background-color: #00ff00;
-            transition: width 0.1s linear, background-color 0.2s;
+        .fuel-tick {
+            position: absolute;
+            top: 0;
+            width: 6px;
+            height: 12px;
+            background-color: black;
+            transform: translateX(-50%);
+        }
+
+        .fuel-label {
+            position: absolute;
+            bottom: 0px;
+            transform: translateX(-50%);
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        #fuel-needle {
+            position: absolute;
+            top: 6px;
+            width: 14px;
+            height: 22px;
+            background-color: #ffffcc;
+            transform: translateX(-50%);
+            transition: left 0.1s linear;
         }
 
         .score-text {
@@ -114,8 +139,14 @@
             <div class="score-text">SCORE: <span id="score-display">0</span></div>
             <div class="score-text">LEVEL: <span id="level-display">1</span></div>
         </div>
-        <div id="fuel-bar-container">
-            <div id="fuel-bar"></div>
+        <div id="fuel-gauge-container">
+            <div class="fuel-tick" style="left: 10%;"></div>
+            <div class="fuel-tick" style="left: 50%;"></div>
+            <div class="fuel-tick" style="left: 90%;"></div>
+            <div class="fuel-label" style="left: 10%;">E</div>
+            <div class="fuel-label" style="left: 50%;">1/2</div>
+            <div class="fuel-label" style="left: 90%;">F</div>
+            <div id="fuel-needle" style="left: 90%;"></div>
         </div>
         <div id="game-over" class="overlay-screen">
             <h1 style="color: #ff3333; font-size: 48px; text-shadow: 2px 2px #000;">GAME OVER</h1>
@@ -131,7 +162,7 @@
             <button onclick="startGame()">START GAME</button>
         </div>
     </div>
-    <script src="game.js?v=3"></script>
+    <script src="game.js?v=4"></script>
 </body>
 
 </html>

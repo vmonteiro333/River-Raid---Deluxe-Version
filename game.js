@@ -441,12 +441,11 @@ function updateHUD() {
     document.getElementById('score-display').innerText = Math.floor(score);
     document.getElementById('level-display').innerText = level;
 
-    // Update Fuel Bar colors
-    const fBar = document.getElementById('fuel-bar');
-    fBar.style.width = Math.max(0, (player.fuel / player.maxFuel) * 100) + '%';
-    if (player.fuel > 50) fBar.style.backgroundColor = '#00ff00';
-    else if (player.fuel > 20) fBar.style.backgroundColor = '#ffff00';
-    else fBar.style.backgroundColor = '#ff0000';
+    // Update Fuel Needle
+    const fNeedle = document.getElementById('fuel-needle');
+    const fuelPercent = player.fuel / player.maxFuel;
+    const leftPos = 10 + (fuelPercent * 80);
+    fNeedle.style.left = Math.max(10, Math.min(90, leftPos)) + '%';
 }
 
 function loop() {
