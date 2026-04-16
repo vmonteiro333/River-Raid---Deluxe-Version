@@ -23,16 +23,16 @@ const keys = {
 };
 
 document.addEventListener('keydown', (e) => {
-    if(keys.hasOwnProperty(e.code) || e.code === 'Space') {
-        if(e.code === 'Space') keys.Space = true;
+    if (keys.hasOwnProperty(e.code) || e.code === 'Space') {
+        if (e.code === 'Space') keys.Space = true;
         else keys[e.code] = true;
         e.preventDefault();
     }
 });
 
 document.addEventListener('keyup', (e) => {
-    if(keys.hasOwnProperty(e.code) || e.code === 'Space') {
-        if(e.code === 'Space') keys.Space = false;
+    if (keys.hasOwnProperty(e.code) || e.code === 'Space') {
+        if (e.code === 'Space') keys.Space = false;
         else keys[e.code] = false;
     }
 });
@@ -40,7 +40,7 @@ document.addEventListener('keyup', (e) => {
 // Audio System (Procedural Web Audio API for retro style)
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playTone(freq, type, duration) {
-    if(audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = type;
@@ -54,7 +54,7 @@ function playTone(freq, type, duration) {
 function playShootSound() { playTone(800, 'square', 0.1); }
 function playExplosionSound() {
     // Noise gen
-    const bufferSize = audioCtx.sampleRate * 0.3; 
+    const bufferSize = audioCtx.sampleRate * 0.3;
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -82,8 +82,8 @@ function AABB(rect1, rect2) {
 // --- CLASSES ---
 class Player {
     constructor() {
-        this.width = 30;
-        this.height = 40;
+        this.width = 42;
+        this.height = 44;
         this.x = canvas.width / 2 - this.width / 2;
         this.y = canvas.height - 100;
         this.speedX = 5;
@@ -123,15 +123,51 @@ class Player {
     }
 
     draw(ctx) {
-        ctx.fillStyle = '#ffcc00'; // Jet color
-        // Draw jet shape
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.width/2, this.y);
-        ctx.lineTo(this.x + this.width, this.y + this.height);
-        ctx.lineTo(this.x + this.width/2, this.y + this.height - 10);
-        ctx.lineTo(this.x, this.y + this.height);
-        ctx.closePath();
-        ctx.fill();
+        const sprite = [
+            "          B          ",
+            "         BWB         ",
+            "         BWB         ",
+            "         BYB         ",
+            "         BYB         ",
+            "        BWYWB        ",
+            "        BWWWB        ",
+            "       BWWWWWB       ",
+            "      BWWWWWWWB      ",
+            "     BWWWWWWWWWB     ",
+            "    BWWWWWWWWWWWB    ",
+            "   BWWWWWWWWWWWWWB   ",
+            "  BWWWWWWWWWWWWWWWB  ",
+            " BWWWWWWWWWWWWWWWWWB ",
+            "BWWWWWWWWWWWWWWWWWWWB",
+            "BBBBBBBBWWWWWBBBBBBBB",
+            "   BWWDBWWWWBDWWB    ",
+            "   BWWDBWWWWBDWWB    ",
+            "   BBBBBWWWWWBBBB    ",
+            "       BWWWWWB       ",
+            "       BBBEBBB       ",
+            "         BBB         "
+        ];
+        const colors = {
+            'B': '#111',
+            'W': '#e8ebf0',
+            'Y': '#f3c642',
+            'D': '#5a6b82',
+            'E': '#333'
+        };
+        const rows = sprite.length;
+        const cols = sprite[0].length;
+        const pixelW = this.width / cols;
+        const pixelH = this.height / rows;
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const char = sprite[r][c];
+                if (char !== ' ' && colors[char]) {
+                    ctx.fillStyle = colors[char];
+                    ctx.fillRect(this.x + c * pixelW, this.y + r * pixelH, pixelW + 0.5, pixelH + 0.5);
+                }
+            }
+        }
     }
 }
 
@@ -158,13 +194,13 @@ class Enemy {
     constructor(y, type) {
         this.width = 40;
         this.height = 30;
-        this.x = canvas.width/2; 
+        this.x = canvas.width / 2;
         this.y = y;
         this.type = type; // 'ship', 'heli', 'jet'
         this.active = true;
         this.dirx = Math.random() > 0.5 ? 1 : -1;
-        
-        if(type === 'ship') {
+
+        if (type === 'ship') {
             this.speedX = 1;
             this.color = '#ff3333';
         } else if (type === 'heli') {
@@ -176,14 +212,14 @@ class Enemy {
             this.color = '#cc33ff';
             this.width = 30; this.height = 20;
         }
-        
+
         // Ensure starting within river visually (approximate)
         this.x = 150 + Math.random() * (canvas.width - 300);
     }
 
     update() {
         this.y += scrollSpeed;
-        
+
         // Movement Logic
         if (this.type === 'ship') {
             this.x += this.speedX * this.dirx;
@@ -208,12 +244,12 @@ class Enemy {
     draw(ctx) {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
-        
+
         // details
         ctx.fillStyle = '#000';
-        if(this.type === 'heli') {
+        if (this.type === 'heli') {
             // rotor
-            ctx.fillRect(this.x + this.width/2 - ((frameCount%10)/10)*this.width, this.y - 5, ((frameCount%10)/10)*this.width*2, 2);
+            ctx.fillRect(this.x + this.width / 2 - ((frameCount % 10) / 10) * this.width, this.y - 5, ((frameCount % 10) / 10) * this.width * 2, 2);
         }
     }
 }
@@ -222,7 +258,7 @@ class FuelTank {
     constructor(y, x) {
         this.width = 30;
         this.height = 40;
-        this.x = x || canvas.width/2 - 15;
+        this.x = x || canvas.width / 2 - 15;
         this.y = y;
         this.active = true;
     }
@@ -247,9 +283,9 @@ class Map {
         this.currentLeft = 100;
         this.currentRight = 100;
         this.targetLeft = 100;
-        
+
         // Fill initial screen
-        for(let i=0; i < canvas.height / this.segmentHeight + 2; i++) {
+        for (let i = 0; i < canvas.height / this.segmentHeight + 2; i++) {
             this.addSegment(canvas.height - i * this.segmentHeight);
         }
     }
@@ -275,25 +311,25 @@ class Map {
             right: this.currentRight,
             riverWidth: canvas.width - this.currentLeft - this.currentRight
         });
-        
+
         // Spawn chance for entities
-        if (distance > 100 && Math.random() < 0.02 + (level*0.005)) {
+        if (distance > 100 && Math.random() < 0.02 + (level * 0.005)) {
             // Ensure enemy is spawned over water
             let eX = this.currentLeft + 20 + Math.random() * (canvas.width - this.currentLeft - this.currentRight - 60);
-            
+
             // Type decision
             let type = 'ship';
             if (level >= 3 && Math.random() < 0.3) type = 'heli';
             if (level >= 6 && Math.random() < 0.2) type = 'jet';
-            
+
             let e = new Enemy(y, type);
             e.x = eX;
             enemies.push(e);
         }
-        
+
         if (distance > 50 && Math.random() < 0.015) {
-             let fX = this.currentLeft + 20 + Math.random() * (canvas.width - this.currentLeft - this.currentRight - 60);
-             fuelTanks.push(new FuelTank(y, fX));
+            let fX = this.currentLeft + 20 + Math.random() * (canvas.width - this.currentLeft - this.currentRight - 60);
+            fuelTanks.push(new FuelTank(y, fX));
         }
     }
 
@@ -308,7 +344,7 @@ class Map {
             let topY = this.segments[0].y;
             this.addSegment(topY - this.segmentHeight);
             distance += 1;
-            
+
             // Level progress
             if (distance % 500 === 0) {
                 level++;
@@ -319,11 +355,11 @@ class Map {
 
     draw(ctx) {
         ctx.fillStyle = '#228B22'; // Grass green
-        
+
         for (let i = 0; i < this.segments.length - 1; i++) {
             let seg = this.segments[i];
-            let nextSeg = this.segments[i+1];
-            
+            let nextSeg = this.segments[i + 1];
+
             // Draw left bank quad
             ctx.beginPath();
             ctx.moveTo(0, seg.y);
@@ -331,7 +367,7 @@ class Map {
             ctx.lineTo(nextSeg.left, nextSeg.y);
             ctx.lineTo(0, nextSeg.y);
             ctx.fill();
-            
+
             // Draw right bank quad
             ctx.beginPath();
             ctx.moveTo(canvas.width, seg.y);
@@ -345,7 +381,7 @@ class Map {
     // Check boundary collision for player rect
     checkCollision(rect) {
         // find segment matching rect Y
-        for(let seg of this.segments) {
+        for (let seg of this.segments) {
             if (rect.y >= seg.y && rect.y <= seg.y + this.segmentHeight) {
                 if (rect.x < seg.left) return true; // left bank
                 if (rect.x + rect.width > canvas.width - seg.right) return true; // right bank
@@ -396,30 +432,30 @@ function gameOver() {
 function updateHUD() {
     document.getElementById('score-display').innerText = Math.floor(score);
     document.getElementById('level-display').innerText = level;
-    
+
     // Update Fuel Bar colors
     const fBar = document.getElementById('fuel-bar');
     fBar.style.width = Math.max(0, (player.fuel / player.maxFuel) * 100) + '%';
-    if(player.fuel > 50) fBar.style.backgroundColor = '#00ff00';
-    else if(player.fuel > 20) fBar.style.backgroundColor = '#ffff00';
+    if (player.fuel > 50) fBar.style.backgroundColor = '#00ff00';
+    else if (player.fuel > 20) fBar.style.backgroundColor = '#ffff00';
     else fBar.style.backgroundColor = '#ff0000';
 }
 
 function loop() {
     if (!playing) return;
     frameCount++;
-    
+
     // --- UPDATE ---
     player.update();
     gameMap.update();
     score += scrollSpeed * 0.05; // Base score for moving
-    
+
     bullets.forEach(b => b.update());
     bullets = bullets.filter(b => b.active);
-    
+
     enemies.forEach(e => e.update());
     enemies = enemies.filter(e => e.active);
-    
+
     fuelTanks.forEach(f => f.update());
     fuelTanks = fuelTanks.filter(f => f.active);
 
@@ -431,10 +467,10 @@ function loop() {
     }
 
     // Fuel Collection
-    for(let f of fuelTanks) {
+    for (let f of fuelTanks) {
         if (AABB(player, f)) {
             player.fuel = Math.min(player.maxFuel, player.fuel + 1); // continuous refuel
-            if(frameCount % 10 === 0) playFuelSound();
+            if (frameCount % 10 === 0) playFuelSound();
         }
     }
 
@@ -466,17 +502,17 @@ function loop() {
 
     // Player vs Enemies
     for (let e of enemies) {
-         if(AABB(player, e)) {
-             gameOver();
-             return;
-         }
+        if (AABB(player, e)) {
+            gameOver();
+            return;
+        }
     }
 
     updateHUD();
 
     // --- DRAW ---
     ctx.clearRect(0, 0, canvas.width, canvas.height); // clear to blue
-    
+
     gameMap.draw(ctx);
     fuelTanks.forEach(f => f.draw(ctx));
     enemies.forEach(e => e.draw(ctx));
@@ -489,17 +525,17 @@ function loop() {
 // Draw initial state before start
 window.onload = () => {
     ctx.fillStyle = '#0000a0';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#fff';
     ctx.font = '24px Courier';
     ctx.fillText("ANTIGRAVITY RIVER RUN", 150, 350);
     ctx.font = '16px Courier';
     ctx.fillText("Click somewhere on page to initialize Audio,", 100, 400);
     ctx.fillText("Then type SPACE or UP to start.", 140, 430);
-    
+
     // Quick listener to start
     const startHandler = (e) => {
-        if(e.code === 'Space' || e.code === 'ArrowUp' || e.type === 'click') {
+        if (e.code === 'Space' || e.code === 'ArrowUp' || e.type === 'click') {
             document.removeEventListener('keydown', startHandler);
             document.removeEventListener('click', startHandler);
             startGame();
