@@ -238,9 +238,46 @@ class Enemy {
             this.x += this.speedX * this.dirx;
         }
 
-        // Bouncing off generic boundaries
-        if (this.x < 100) this.dirx = 1;
-        if (this.x > canvas.width - 100 - this.width) this.dirx = -1;
+        // Bouncing off terrain properly
+        let leftLimit = 100;
+        let rightLimit = canvas.width - 100;
+        let islandActive = false;
+        let islandCenter = 0;
+        let islandW = 0;
+
+        if (typeof gameMap !== 'undefined' && gameMap.segments.length > 0) {
+            // Find segment that matches enemy Y (approximate)
+            let currentSeg = gameMap.segments.find(s => this.y >= s.y && this.y <= s.y + 20) || gameMap.segments[gameMap.segments.length - 1];
+            leftLimit = currentSeg.left;
+            rightLimit = canvas.width - currentSeg.right;
+            if (currentSeg.islandW > 0) {
+                islandActive = true;
+                islandCenter = currentSeg.islandCenter;
+                islandW = currentSeg.islandW;
+            }
+        }
+
+        if (this.x < leftLimit) {
+            this.x = leftLimit;
+            this.dirx = 1;
+        }
+        if (this.x + this.width > rightLimit) {
+            this.x = rightLimit - this.width;
+            this.dirx = -1;
+        }
+
+        // Bounce off islands
+        if (islandActive) {
+            let islandLeftEdge = islandCenter - islandW / 2;
+            let islandRightEdge = islandCenter + islandW / 2;
+            if (this.x + this.width > islandLeftEdge && this.x < islandCenter) {
+                this.x = islandLeftEdge - this.width;
+                this.dirx = -1;
+            } else if (this.x < islandRightEdge && this.x + this.width >= islandCenter) {
+                this.x = islandRightEdge;
+                this.dirx = 1;
+            }
+        }
 
         if (this.y > canvas.height) this.active = false;
     }
@@ -357,16 +394,24 @@ class Map {
 
     addSegment(y) {
         // change targets occasionally
-        if (Math.random() < 0.05) {
-            // Difficult scales: narrower river in higher levels
+        // Do not change limits if island is active, to prevent dead ends
+        if (!this.islandActive && Math.random() < 0.05) {
             let minWidth = Math.max(100, 300 - (level * 15));
-            this.targetWidth = minWidth + Math.random() * 200;
-            let maxLeft = canvas.width - this.targetWidth;
-            this.targetLeft = Math.random() * maxLeft;
-        }
+            let newWidth = minWidth + Math.random() * 200;
+            let maxLeft = canvas.width - newWidth;
+            let newLeft = Math.random() * maxLeft;
 
-        // Snap directly to targets instead of smooth curves to make rigid, straight terrain layout
-        this.currentLeft = this.targetLeft;
+            // To prevent impossible jumps, move left/width by maximum 40px steps
+            this.targetLeft = this.currentLeft + Math.max(-40, Math.min(40, newLeft - this.currentLeft));
+            this.targetWidth = this.targetWidth + Math.max(-40, Math.min(40, newWidth - this.targetWidth));
+
+            // Re-bound
+            if (this.targetLeft < 0) this.targetLeft = 0;
+            if (this.targetLeft + this.targetWidth > canvas.width) this.targetLeft = canvas.width - this.targetWidth;
+
+            // Snap directly to targets instead of smooth curves to make rigid, straight terrain layout
+            this.currentLeft = this.targetLeft;
+        }
         let rightSize = canvas.width - this.currentLeft - this.targetWidth;
         this.currentRight = rightSize;
 
