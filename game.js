@@ -89,7 +89,7 @@ class Player {
         this.speedX = 5;
         this.fuel = 100;
         this.maxFuel = 100;
-        this.fuelRaid = 0.05;
+        this.fuelRaid = 0.025;
         this.shootCooldown = 0;
     }
 
@@ -327,7 +327,8 @@ class Map {
             enemies.push(e);
         }
 
-        if (distance > 50 && Math.random() < 0.015) {
+        // Increase fuel tank spawn rate
+        if (distance > 50 && Math.random() < 0.025) {
             let fX = this.currentLeft + 20 + Math.random() * (canvas.width - this.currentLeft - this.currentRight - 60);
             fuelTanks.push(new FuelTank(y, fX));
         }
