@@ -343,6 +343,12 @@ class Map {
         this.currentRight = 100;
         this.targetLeft = 100;
 
+        this.islandActive = false;
+        this.islandTimer = 0;
+        this.currentIslandCenter = 0;
+        this.currentIslandW = 0;
+        this.targetIslandW = 0;
+
         // Fill initial screen
         for (let i = 0; i < canvas.height / this.segmentHeight + 2; i++) {
             this.addSegment(canvas.height - i * this.segmentHeight);
@@ -364,17 +370,50 @@ class Map {
         let rightSize = canvas.width - this.currentLeft - this.targetWidth;
         this.currentRight += (rightSize - this.currentRight) * 0.1;
 
+        // Island logic
+        if (!this.islandActive && Math.random() < 0.015 && this.targetWidth > 200) {
+            this.islandActive = true;
+            this.islandTimer = 40 + Math.random() * 60; // duration in segments
+            this.currentIslandCenter = this.currentLeft + this.targetWidth / 2;
+            this.currentIslandW = 0;
+            this.targetIslandW = this.targetWidth * 0.35; // island takes 35% of river
+        }
+
+        if (this.islandActive) {
+            this.islandTimer--;
+            if (this.islandTimer <= 0) this.targetIslandW = 0;
+            if (this.islandTimer <= 0 && this.currentIslandW < 5) {
+                this.islandActive = false;
+                this.currentIslandW = 0;
+            }
+        }
+
+        // Lerp Island width
+        this.currentIslandW += (this.targetIslandW - this.currentIslandW) * 0.1;
+
         this.segments.unshift({
             y: y,
             left: this.currentLeft,
             right: this.currentRight,
+            islandCenter: this.currentIslandCenter,
+            islandW: this.currentIslandW,
             riverWidth: canvas.width - this.currentLeft - this.currentRight
         });
 
         // Spawn chance for entities
         if (distance > 30 && Math.random() < 0.045 + (level * 0.008)) {
-            // Ensure enemy is spawned over water
             let eX = this.currentLeft + 20 + Math.random() * (canvas.width - this.currentLeft - this.currentRight - 60);
+
+            if (this.currentIslandW > 20) {
+                let leftChannel = (this.currentIslandCenter - this.currentIslandW / 2) - this.currentLeft;
+                let rightChannel = (canvas.width - this.currentRight) - (this.currentIslandCenter + this.currentIslandW / 2);
+
+                if (Math.random() > 0.5 && leftChannel > 50) {
+                    eX = this.currentLeft + 10 + Math.random() * (leftChannel - 40);
+                } else if (rightChannel > 50) {
+                    eX = (this.currentIslandCenter + this.currentIslandW / 2) + 10 + Math.random() * (rightChannel - 40);
+                }
+            }
 
             // Type decision
             let type = 'ship';
@@ -389,6 +428,16 @@ class Map {
         // Increase fuel tank spawn rate
         if (distance > 50 && Math.random() < 0.025) {
             let fX = this.currentLeft + 20 + Math.random() * (canvas.width - this.currentLeft - this.currentRight - 60);
+
+            if (this.currentIslandW > 20) {
+                let leftChannel = (this.currentIslandCenter - this.currentIslandW / 2) - this.currentLeft;
+                let rightChannel = (canvas.width - this.currentRight) - (this.currentIslandCenter + this.currentIslandW / 2);
+                if (Math.random() > 0.5 && leftChannel > 40) {
+                    fX = this.currentLeft + 5 + Math.random() * (leftChannel - 35);
+                } else if (rightChannel > 40) {
+                    fX = (this.currentIslandCenter + this.currentIslandW / 2) + 5 + Math.random() * (rightChannel - 35);
+                }
+            }
             fuelTanks.push(new FuelTank(y, fX));
         }
     }
@@ -435,6 +484,16 @@ class Map {
             ctx.lineTo(canvas.width - nextSeg.right, nextSeg.y);
             ctx.lineTo(canvas.width, nextSeg.y);
             ctx.fill();
+
+            // Draw Island
+            if (seg.islandW > 0 && nextSeg.islandW > 0) {
+                ctx.beginPath();
+                ctx.moveTo(seg.islandCenter - seg.islandW / 2, seg.y);
+                ctx.lineTo(seg.islandCenter + seg.islandW / 2, seg.y);
+                ctx.lineTo(nextSeg.islandCenter + nextSeg.islandW / 2, nextSeg.y);
+                ctx.lineTo(nextSeg.islandCenter - nextSeg.islandW / 2, nextSeg.y);
+                ctx.fill();
+            }
         }
     }
 
@@ -445,6 +504,13 @@ class Map {
             if (rect.y >= seg.y && rect.y <= seg.y + this.segmentHeight) {
                 if (rect.x < seg.left) return true; // left bank
                 if (rect.x + rect.width > canvas.width - seg.right) return true; // right bank
+                // island
+                if (seg.islandW > 0) {
+                    if (rect.x + rect.width > seg.islandCenter - seg.islandW / 2 &&
+                        rect.x < seg.islandCenter + seg.islandW / 2) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
