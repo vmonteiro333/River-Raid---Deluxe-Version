@@ -418,6 +418,7 @@ function init() {
 
 function startGame() {
     audioCtx.resume();
+    document.getElementById('start-screen').style.display = 'none';
     init();
 }
 
@@ -425,8 +426,15 @@ function gameOver() {
     playing = false;
     playExplosionSound();
     cancelAnimationFrame(animationId);
-    document.getElementById('final-score').innerText = score;
+    document.getElementById('final-score').innerText = Math.floor(score);
     document.getElementById('game-over').style.display = 'flex';
+}
+
+function showStartScreen() {
+    document.getElementById('game-over').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'flex';
+    ctx.fillStyle = '#0000a0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 function updateHUD() {
@@ -526,21 +534,4 @@ function loop() {
 window.onload = () => {
     ctx.fillStyle = '#0000a0';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#fff';
-    ctx.font = '24px Courier';
-    ctx.fillText("ANTIGRAVITY RIVER RUN", 150, 350);
-    ctx.font = '16px Courier';
-    ctx.fillText("Click somewhere on page to initialize Audio,", 100, 400);
-    ctx.fillText("Then type SPACE or UP to start.", 140, 430);
-
-    // Quick listener to start
-    const startHandler = (e) => {
-        if (e.code === 'Space' || e.code === 'ArrowUp' || e.type === 'click') {
-            document.removeEventListener('keydown', startHandler);
-            document.removeEventListener('click', startHandler);
-            startGame();
-        }
-    };
-    document.addEventListener('keydown', startHandler);
-    document.addEventListener('click', startHandler);
 };
