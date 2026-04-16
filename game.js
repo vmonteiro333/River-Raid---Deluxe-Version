@@ -393,10 +393,10 @@ class Map {
 
         this.segments.unshift({
             y: y,
-            left: this.currentLeft,
-            right: this.currentRight,
-            islandCenter: this.currentIslandCenter,
-            islandW: this.currentIslandW,
+            left: Math.round(this.currentLeft / 20) * 20,
+            right: Math.round(this.currentRight / 20) * 20,
+            islandCenter: Math.round(this.currentIslandCenter / 20) * 20,
+            islandW: Math.round(this.currentIslandW / 20) * 20,
             riverWidth: canvas.width - this.currentLeft - this.currentRight
         });
 
@@ -469,30 +469,15 @@ class Map {
             let seg = this.segments[i];
             let nextSeg = this.segments[i + 1];
 
-            // Draw left bank quad
-            ctx.beginPath();
-            ctx.moveTo(0, seg.y);
-            ctx.lineTo(seg.left, seg.y);
-            ctx.lineTo(nextSeg.left, nextSeg.y);
-            ctx.lineTo(0, nextSeg.y);
-            ctx.fill();
+            let h = nextSeg.y - seg.y;
 
-            // Draw right bank quad
-            ctx.beginPath();
-            ctx.moveTo(canvas.width, seg.y);
-            ctx.lineTo(canvas.width - seg.right, seg.y);
-            ctx.lineTo(canvas.width - nextSeg.right, nextSeg.y);
-            ctx.lineTo(canvas.width, nextSeg.y);
-            ctx.fill();
+            // Draw left and right bank blocks
+            ctx.fillRect(0, seg.y, seg.left, h + 1);
+            ctx.fillRect(canvas.width - seg.right, seg.y, seg.right, h + 1);
 
-            // Draw Island
-            if (seg.islandW > 0 && nextSeg.islandW > 0) {
-                ctx.beginPath();
-                ctx.moveTo(seg.islandCenter - seg.islandW / 2, seg.y);
-                ctx.lineTo(seg.islandCenter + seg.islandW / 2, seg.y);
-                ctx.lineTo(nextSeg.islandCenter + nextSeg.islandW / 2, nextSeg.y);
-                ctx.lineTo(nextSeg.islandCenter - nextSeg.islandW / 2, nextSeg.y);
-                ctx.fill();
+            // Draw Island block
+            if (seg.islandW > 0) {
+                ctx.fillRect(seg.islandCenter - seg.islandW / 2, seg.y, seg.islandW, h + 1);
             }
         }
     }
